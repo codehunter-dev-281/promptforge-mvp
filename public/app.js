@@ -1,0 +1,10 @@
+const $ = (id) => document.getElementById(id);
+let currentResult = "";
+const historyKey = "promptforge-history";
+function loadHistory(){const items=JSON.parse(localStorage.getItem(historyKey)||"[]");$("history-list").innerHTML="";if(!items.length){$("history-list").innerHTML='<span class="muted">Nothing saved yet.</span>';return;}items.slice(0,6).forEach((item)=>{const b=document.createElement("button");b.className="history-item";b.textContent=item.prompt.slice(0,48);b.title=item.prompt;b.onclick=()=>{$("prompt").value=item.prompt;currentResult=item.result;showResult(item.result,item.mode||"saved");};$("history-list").appendChild(b);});}
+function showResult(text,mode){currentResult=text;$("empty").hidden=true;$("result-wrap").hidden=false;$("result").textContent=text;$("mode").textContent=mode.toUpperCase();}
+document.querySelectorAll("[data-example]").forEach(b=>b.addEventListener("click",()=>$("prompt").value=b.dataset.example));
+$("optimize").addEventListener("click",async()=>{const prompt=$("prompt").value.trim();if(!prompt){$("prompt").focus();return;}const btn=$("optimize");btn.disabled=true;btn.innerHTML="<span>✦</span> Working…";$("mode").textContent="THINKING";try{const r=await fetch("/api/optimize",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({prompt,task:$("task").value,target:$("target").value})});const data=await r.json();if(!r.ok)throw new Error(data.error||"Request failed");showResult(data.result,data.mode); }catch(e){$("mode").textContent="ERROR";alert(e.message);}finally{btn.disabled=false;btn.innerHTML="<span>✦</span> Optimize prompt <b>→</b>";}});
+$("copy").onclick=async()=>{await navigator.clipboard.writeText(currentResult);$("copy").textContent="Copied ✓";setTimeout(()=>$("copy").textContent="Copy prompt",1300);};
+$("save").onclick=()=>{const items=JSON.parse(localStorage.getItem(historyKey)||"[]");items.unshift({prompt:$("prompt").value,result:currentResult,mode:$("mode").textContent.toLowerCase()});localStorage.setItem(historyKey,JSON.stringify(items.slice(0,12)));loadHistory();};
+$("clear-history").onclick=()=>{localStorage.removeItem(historyKey);loadHistory();};loadHistory();
