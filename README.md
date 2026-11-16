@@ -1,3 +1,5 @@
+This is for MVP, still in progress!!!
+
 # PromptForge
 
 An AI prompt optimizer that turns rough instructions into structured, clearer prompts with practical improvement notes.
